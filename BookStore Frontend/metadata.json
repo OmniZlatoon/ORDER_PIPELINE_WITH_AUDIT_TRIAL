@@ -1,0 +1,6 @@
+{
+  "name": "OrderFlow Bookstore — Order Pipeline with Audit Trail",
+  "description": "Separate Customer and Administrator React frontends for the Spring Boot Order Pipeline with Audit Trail bookstore system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
