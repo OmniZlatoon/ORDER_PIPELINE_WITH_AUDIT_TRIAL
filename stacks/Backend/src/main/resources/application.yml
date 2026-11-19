@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/order_pipeline?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
-    username: ${DB_USERNAME:order_app}
-    password: ${DB_PASSWORD:order_app}
+    url: "${DB_URL:jdbc:mysql://localhost:3306/order_pipeline?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}"
+    username: "${DB_USERNAME:root}"
+    password: "${DB_PASSWORD:qwaszx1234,.}"
   jpa:
     open-in-view: false
     hibernate:
@@ -17,6 +17,6 @@ spring:
 
 app:
   cors:
-    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+    allowed-origins: "${FRONTEND_ORIGIN:http://localhost:5173,http://localhost:5000,https://subtarsal-kathyrn-untreated.ngrok-free.dev}"
   payment:
     simulate-failure: ${SIMULATE_PAYMENT_FAILURE:false}
