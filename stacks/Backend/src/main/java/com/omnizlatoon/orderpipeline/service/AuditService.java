@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+
 @Service
 public class AuditService {
     private final AuditLogRepository auditLogRepository;
@@ -18,6 +20,6 @@ public class AuditService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void record(Order order, String stepName, AuditExecutionStatus status, String message) {
-        auditLogRepository.save(new AuditLog(order, stepName, status, message));
+        auditLogRepository.save(new AuditLog(order, stepName.toUpperCase(Locale.ROOT), status, message));
     }
 }

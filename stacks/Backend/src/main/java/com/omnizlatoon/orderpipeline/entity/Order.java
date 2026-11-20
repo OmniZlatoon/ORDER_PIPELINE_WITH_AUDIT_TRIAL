@@ -48,6 +48,15 @@ public class Order {
     @Column(name = "payment_status", nullable = false, length = 30)
     private PaymentStatus paymentStatus = PaymentStatus.NOT_PROCESSED;
 
+    @Column(name = "fapshi_transaction_id", unique = true, length = 100)
+    private String fapshiTransactionId;
+
+    @Column(name = "payment_amount_xaf")
+    private Long paymentAmountXaf;
+
+    @Column(name = "exchange_rate_usd_xaf", precision = 18, scale = 8)
+    private BigDecimal exchangeRateUsdXaf;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -63,6 +72,12 @@ public class Order {
 
     @Transient
     private final Set<Long> missingBookIds = new HashSet<>();
+
+    @Transient
+    private String paymentLink;
+
+    @Transient
+    private String paymentAuditMessage;
 
     protected Order() {
     }
@@ -98,6 +113,26 @@ public class Order {
         this.paymentStatus = paymentStatus;
     }
 
+    public void setFapshiTransactionId(String fapshiTransactionId) {
+        this.fapshiTransactionId = fapshiTransactionId;
+    }
+
+    public void setPaymentAmountXaf(Long paymentAmountXaf) {
+        this.paymentAmountXaf = paymentAmountXaf;
+    }
+
+    public void setExchangeRateUsdXaf(BigDecimal exchangeRateUsdXaf) {
+        this.exchangeRateUsdXaf = exchangeRateUsdXaf;
+    }
+
+    public void setPaymentLink(String paymentLink) {
+        this.paymentLink = paymentLink;
+    }
+
+    public void setPaymentAuditMessage(String paymentAuditMessage) {
+        this.paymentAuditMessage = paymentAuditMessage;
+    }
+
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
     }
@@ -124,6 +159,26 @@ public class Order {
 
     public PaymentStatus getPaymentStatus() {
         return paymentStatus;
+    }
+
+    public String getFapshiTransactionId() {
+        return fapshiTransactionId;
+    }
+
+    public Long getPaymentAmountXaf() {
+        return paymentAmountXaf;
+    }
+
+    public BigDecimal getExchangeRateUsdXaf() {
+        return exchangeRateUsdXaf;
+    }
+
+    public String getPaymentLink() {
+        return paymentLink;
+    }
+
+    public String getPaymentAuditMessage() {
+        return paymentAuditMessage;
     }
 
     public LocalDateTime getCreatedAt() {

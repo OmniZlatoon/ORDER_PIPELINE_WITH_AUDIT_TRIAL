@@ -32,6 +32,10 @@ export function createOrder(order) {
   });
 }
 
+export function reconcilePayment(orderId) {
+  return request(`/api/orders/${orderId}/reconcile-payment`, { method: "POST" });
+}
+
 export function getOrderAudit(orderId) {
   return request(`/api/orders/${orderId}/audit`);
 }

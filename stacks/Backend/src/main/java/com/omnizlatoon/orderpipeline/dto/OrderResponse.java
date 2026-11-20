@@ -13,7 +13,11 @@ public record OrderResponse(
         String paymentStatus,
         BigDecimal totalAmount,
         LocalDateTime createdAt,
-        LocalDateTime completedAt
+        LocalDateTime completedAt,
+        String paymentLink,
+        Long paymentAmountXaf,
+        BigDecimal exchangeRateUsdXaf,
+        String paymentMessage
 ) {
     public static OrderResponse from(Order order) {
         return new OrderResponse(
@@ -24,7 +28,11 @@ public record OrderResponse(
                 order.getPaymentStatus().name(),
                 order.getTotalAmount(),
                 order.getCreatedAt(),
-                order.getCompletedAt()
+                order.getCompletedAt(),
+                order.getPaymentLink(),
+                order.getPaymentAmountXaf(),
+                order.getExchangeRateUsdXaf(),
+                order.getPaymentAuditMessage()
         );
     }
 }

@@ -2,6 +2,8 @@
 
 This is a Java 21 / Spring Boot Maven project with the layered package structure described in the project design. It contains no Node, Kotlin, or other non-Java application code. Open `pom.xml` in IntelliJ IDEA and run `OrderPipelineApplication`.
 
+The backend loads payment settings from an untracked `stacks/Backend/.env` file when its working directory is `stacks/Backend`. If `.env` does not already exist, copy `.env.example` to create it; otherwise preserve its existing credentials and add `FAPSHI_WEBHOOK_SECRET`. Set that value to the webhook secret configured in the Fapshi dashboard. Keep `.env` private and never commit it.
+
 The application defaults to MySQL at `localhost:3306`, database `order_pipeline`, and user `root`. Set `DB_PASSWORD` in the IntelliJ run configuration; the password default is intentionally blank and must not be added to `application.yml`. For the Docker Compose database, set `DB_USERNAME=order_app` and `DB_PASSWORD=order_app` instead. Hibernate validates the schema at startup rather than silently creating a different schema.
 
 For an existing local MySQL server, execute `../Database/init/01-schema.sql` using an account allowed to initialize the schema, then set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in the IntelliJ run configuration. The SQL script does not create a MySQL login.
@@ -15,6 +17,19 @@ Set these environment variables in the IntelliJ run configuration to override lo
 - `DB_PASSWORD`
 - `SIMULATE_PAYMENT_FAILURE=true` to exercise a failed payment
 - `FRONTEND_ORIGIN` to set the allowed development origin(s), comma-separated
+- `FRONTEND_BASE_URL` to override the default ngrok browser URL Fapshi returns to after checkout
+- `FAPSHI_WEBHOOK_SECRET` to verify Fapshi's `x-wh-secret` notification header
+- `EXCHANGE_RATE_API_URL` to override the USD/XAF rate API
+
+Hosted checkout converts the server-calculated USD total to whole XAF using the
+daily rate from Open ER API, then waits in `PENDING` for a verified Fapshi
+webhook whose transaction ID, order reference, and XAF amount match the order.
+Only a matching `SUCCESSFUL` response from Fapshi's payment-status endpoint
+sets `paymentStatus=SUCCESS` and permits the final order stages to complete.
+The callback status or browser redirect alone is never treated as proof of
+payment. After checkout returns, the frontend rechecks pending orders through
+`POST /api/orders/{orderId}/reconcile-payment`; temporary provider errors leave
+the order pending and are retried.
 
 Run backend tests with `mvn test`.
 

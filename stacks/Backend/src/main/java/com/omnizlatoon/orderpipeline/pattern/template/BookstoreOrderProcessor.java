@@ -9,6 +9,7 @@ import com.omnizlatoon.orderpipeline.pattern.observer.OrderCompletionPublisher;
 import com.omnizlatoon.orderpipeline.repository.OrderItemRepository;
 import com.omnizlatoon.orderpipeline.service.AuditService;
 import com.omnizlatoon.orderpipeline.service.OrderProcessingException;
+import com.omnizlatoon.orderpipeline.service.HostedPaymentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -19,17 +20,20 @@ import java.time.LocalDateTime;
 public class BookstoreOrderProcessor extends OrderProcessingTemplate {
     private final OrderItemRepository orderItemRepository;
     private final OrderCompletionPublisher completionPublisher;
+    private final HostedPaymentService hostedPaymentService;
     private final boolean simulatePaymentFailure;
 
     public BookstoreOrderProcessor(
             AuditService auditService,
             OrderItemRepository orderItemRepository,
             OrderCompletionPublisher completionPublisher,
+            HostedPaymentService hostedPaymentService,
             @Value("${app.payment.simulate-failure:false}") boolean simulatePaymentFailure
     ) {
         super(auditService);
         this.orderItemRepository = orderItemRepository;
         this.completionPublisher = completionPublisher;
+        this.hostedPaymentService = hostedPaymentService;
         this.simulatePaymentFailure = simulatePaymentFailure;
     }
 
@@ -86,7 +90,21 @@ public class BookstoreOrderProcessor extends OrderProcessingTemplate {
             order.setPaymentStatus(PaymentStatus.FAILED);
             throw new OrderProcessingException("Simulated payment was declined");
         }
-        order.setPaymentStatus(PaymentStatus.SUCCESS);
+        try {
+            HostedPaymentService.Checkout checkout = hostedPaymentService.createCheckout(order);
+            order.setFapshiTransactionId(checkout.transactionId());
+            order.setPaymentAmountXaf(checkout.amountXaf());
+            order.setExchangeRateUsdXaf(checkout.exchangeRate());
+            order.setPaymentLink(checkout.paymentLink());
+            order.setPaymentStatus(PaymentStatus.PENDING);
+            order.setPaymentAuditMessage("Fapshi checkout created; awaiting payment confirmation.");
+        } catch (HostedPaymentService.PaymentInitiationUncertainException exception) {
+            order.setPaymentStatus(PaymentStatus.PENDING);
+            order.setPaymentAuditMessage(exception.getMessage());
+        } catch (HostedPaymentService.PaymentSetupException exception) {
+            order.setPaymentStatus(PaymentStatus.FAILED);
+            throw new OrderProcessingException(exception.getMessage());
+        }
     }
 
     @Override

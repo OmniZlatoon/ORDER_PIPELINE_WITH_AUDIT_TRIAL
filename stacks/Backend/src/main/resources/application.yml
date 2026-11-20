@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: "${DB_URL:jdbc:mysql://localhost:3306/order_pipeline?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}"
     username: "${DB_USERNAME:root}"
@@ -17,6 +19,15 @@ spring:
 
 app:
   cors:
-    allowed-origins: "${FRONTEND_ORIGIN:http://localhost:5173,http://localhost:5000,https://subtarsal-kathyrn-untreated.ngrok-free.dev}"
+    allowed-origins: "${FRONTEND_ORIGIN:http://localhost:6000,http://localhost:5000,https://subtarsal-kathyrn-untreated.ngrok-free.dev}"
   payment:
     simulate-failure: ${SIMULATE_PAYMENT_FAILURE:false}
+  fapshi:
+    base-url: ${FAPSHI_API_BASE_URL:https://sandbox.fapshi.com}
+    api-user: ${FAPSHI_API_USER:}
+    api-secret: ${FAPSHI_API_SECRET:}
+    webhook-secret: ${FAPSHI_WEBHOOK_SECRET:}
+  exchange-rate:
+    url: ${EXCHANGE_RATE_API_URL:https://open.er-api.com/v6/latest/USD}
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:https://subtarsal-kathyrn-untreated.ngrok-free.dev}
