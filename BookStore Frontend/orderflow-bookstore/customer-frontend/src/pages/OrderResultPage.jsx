@@ -166,7 +166,7 @@ export default function OrderResultPage() {
               <LoadingSpinner message="Loading shipping and email notifications..." />
             </div>
           ) : (
-            <ObserverStatus notifications={notifications} />
+            <ObserverStatus notifications={notifications} pipelineFailed={orderStatus === 'FAILED'} />
           )}
 
           {!auditLoading && !auditError ? <AuditTimeline auditEvents={auditEvents} /> : null}

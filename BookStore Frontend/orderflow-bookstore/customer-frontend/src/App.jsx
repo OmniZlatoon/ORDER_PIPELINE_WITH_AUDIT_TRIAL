@@ -1,18 +1,10 @@
 import { ShoppingBag } from 'lucide-react';
-import { BrowserRouter, Link, NavLink, useNavigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter, Link, NavLink } from 'react-router-dom';
 import { CartProvider, useCart } from './context/CartContext';
 import AppRoutes from './routes/AppRoutes';
 
-function CustomerShellContent({ onAdminAccess }) {
-  const navigate = useNavigate();
+function CustomerShellContent() {
   const { totalItemCount } = useCart();
-  const { currentUser, isAuthenticated, logout } = useAuth();
-
-  const handleSignOut = () => {
-    logout();
-    navigate('/');
-  };
 
   return (
     <div className="cf-root">
@@ -42,23 +34,6 @@ function CustomerShellContent({ onAdminAccess }) {
             >
               Checkout
             </NavLink>
-            {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="cf-nav-btn"
-                title={`Signed in as ${currentUser?.fullName || currentUser?.email}`}
-              >
-                Sign Out
-              </button>
-            ) : (
-              <NavLink
-                to="/login"
-                className={({ isActive }) => `cf-nav-link ${isActive ? 'active' : ''}`}
-              >
-                Sign In
-              </NavLink>
-            )}
           </nav>
 
           <Link to="/checkout" className="cf-header-cta">
@@ -70,7 +45,7 @@ function CustomerShellContent({ onAdminAccess }) {
 
       <main className="cf-main">
         <div className="cf-container">
-          <AppRoutes onAdminAccess={onAdminAccess} />
+          <AppRoutes />
         </div>
       </main>
 
@@ -92,25 +67,18 @@ function CustomerShellContent({ onAdminAccess }) {
               </ul>
             </div>
             <div>
-              <h3 className="cf-footer-heading">Customer Account</h3>
+              <h3 className="cf-footer-heading">Order Tracking</h3>
               <ul className="cf-footer-links">
-                {isAuthenticated ? (
-                  <li><span>Signed in as {currentUser?.fullName || currentUser?.email}</span></li>
-                ) : (
-                  <>
-                    <li><Link to="/login">Sign In</Link></li>
-                    <li><Link to="/signup">Create Account</Link></li>
-                  </>
-                )}
+                <li><Link to="/order-lookup">Track an Order</Link></li>
+                <li><Link to="/checkout">Place New Order</Link></li>
+                <li><Link to="/">Available Titles</Link></li>
               </ul>
             </div>
           </div>
 
           <div className="cf-footer-inner">
-            <span>
-              OrderFlow Books — Online Bookstore
-              {isAuthenticated && currentUser?.fullName ? ` · Signed in as ${currentUser.fullName}` : ''}
-            </span>
+            <span>OrderFlow Books — Online Bookstore</span>
+            <span>Powered by <strong style={{ color: '#ffffff', fontWeight: 600 }}>Webuild</strong></span>
             <span>Transparent Step-by-Step Order Tracking</span>
           </div>
         </div>
@@ -119,12 +87,8 @@ function CustomerShellContent({ onAdminAccess }) {
   );
 }
 
-export function CustomerShell({ onAdminAccess }) {
-  return (
-    <AuthProvider>
-      <CustomerShellContent onAdminAccess={onAdminAccess} />
-    </AuthProvider>
-  );
+export function CustomerShell() {
+  return <CustomerShellContent />;
 }
 
 export default function App() {

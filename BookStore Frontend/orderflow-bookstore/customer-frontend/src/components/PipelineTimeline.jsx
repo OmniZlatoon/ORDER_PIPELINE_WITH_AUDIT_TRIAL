@@ -28,25 +28,32 @@ function formatTimestamp(value) {
 }
 
 export default function PipelineTimeline({ auditEvents = [], orderStatus }) {
-  let earlierStageFailed = false;
+  const upperOrderStatus = String(orderStatus || '').toUpperCase();
+  let failedStageInfo = null;
 
-  const resolvedStages = PIPELINE_STAGES.map((stage) => {
+  const rawStages = PIPELINE_STAGES.map((stage) => {
+    // Once any stage fails, immediately stop and end all remaining stages.
+    if (failedStageInfo) {
+      return {
+        ...stage,
+        status: 'NOT EXECUTED',
+        cardVariant: 'cf-stage-card-not-executed',
+        message: `Ended automatically because Step ${failedStageInfo.number} (${failedStageInfo.name}) failed.`,
+        timestamp: null,
+      };
+    }
+
     const matchingEvents = auditEvents.filter((event) => {
       const key = normalizeStepKey(event.stepName);
       return key === stage.key || key.includes(stage.key);
     });
 
     if (matchingEvents.length === 0) {
-      const message = earlierStageFailed
-        ? 'Skipped because an earlier step could not be completed.'
-        : orderStatus === 'FAILED'
-          ? 'Not completed.'
-          : 'Waiting for earlier step.';
       return {
         ...stage,
-        status: 'NOT EXECUTED',
-        cardVariant: 'cf-stage-card-not-executed',
-        message,
+        status: upperOrderStatus === 'COMPLETED' ? 'SUCCESS' : 'NOT EXECUTED',
+        cardVariant: upperOrderStatus === 'COMPLETED' ? 'cf-stage-card-success' : 'cf-stage-card-not-executed',
+        message: upperOrderStatus === 'COMPLETED' ? 'Step completed.' : 'Waiting for earlier step.',
         timestamp: null,
       };
     }
@@ -55,12 +62,15 @@ export default function PipelineTimeline({ auditEvents = [], orderStatus }) {
       (e) => String(e.executionStatus).toUpperCase() === 'FAILED'
     );
     if (failedEvent) {
-      earlierStageFailed = true;
+      failedStageInfo = {
+        number: stage.number,
+        name: stage.name,
+      };
       return {
         ...stage,
         status: 'FAILED',
         cardVariant: 'cf-stage-card-failed',
-        message: failedEvent.message || 'This step could not be completed.',
+        message: failedEvent.message || 'This step failed and ended the order process.',
         timestamp: formatTimestamp(failedEvent.createdAt),
       };
     }
@@ -88,13 +98,43 @@ export default function PipelineTimeline({ auditEvents = [], orderStatus }) {
     };
   });
 
+  // Fallback if the order status is FAILED without a FAILED audit record on any step.
+  let resolvedStages = rawStages;
+  if (upperOrderStatus === 'FAILED' && !failedStageInfo) {
+    let forced = false;
+    resolvedStages = rawStages.map((stage) => {
+      if (forced) {
+        return {
+          ...stage,
+          status: 'NOT EXECUTED',
+          cardVariant: 'cf-stage-card-not-executed',
+          message: `Ended automatically because Step ${failedStageInfo.number} (${failedStageInfo.name}) failed.`,
+          timestamp: null,
+        };
+      }
+      if (stage.status === 'STARTED' || stage.status === 'NOT EXECUTED') {
+        forced = true;
+        failedStageInfo = { number: stage.number, name: stage.name };
+        return {
+          ...stage,
+          status: 'FAILED',
+          cardVariant: 'cf-stage-card-failed',
+          message: 'This step failed and automatically ended the remaining order process.',
+        };
+      }
+      return stage;
+    });
+  }
+
   return (
     <section className="cf-card" aria-label="Order progress steps">
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h2 className="cf-section-title">Order Progress</h2>
           <p className="cf-section-desc" style={{ marginBottom: 0 }}>
-            Your order moves through six step-by-step checks. If any step cannot be completed, later steps are skipped.
+            {failedStageInfo
+              ? `The order pipeline stopped at Step ${failedStageInfo.number} (${failedStageInfo.name}). That step is marked failed and the remaining process ended automatically.`
+              : 'Your order moves through six step-by-step checks. If any step fails, it is marked failed and the entire remaining process ends automatically.'}
           </p>
         </div>
       </div>
@@ -111,7 +151,7 @@ export default function PipelineTimeline({ auditEvents = [], orderStatus }) {
             </div>
             <p className="cf-stage-message">{stage.message}</p>
             <div className="cf-stage-time">
-              {stage.timestamp ? stage.timestamp : 'Not started yet'}
+              {stage.timestamp ? stage.timestamp : stage.status === 'FAILED' ? 'Process ended' : 'Not executed'}
             </div>
           </div>
         ))}

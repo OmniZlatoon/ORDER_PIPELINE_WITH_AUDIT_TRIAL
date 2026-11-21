@@ -1,20 +1,22 @@
 import {
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   BookOpen,
+  Check,
   CheckCircle2,
   CreditCard,
   LayoutGrid,
-  Lightbulb,
   List,
   MailCheck,
   PackageCheck,
+  PieChart,
   RefreshCw,
   Search,
   ShieldCheck,
   ShoppingBag,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getBookPalette } from '../components/BookCard';
 import BookList from '../components/BookList';
@@ -24,32 +26,77 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { useCart } from '../context/CartContext';
 import { useBooks } from '../hooks/useBooks';
 
-function OpenBookHeroIllustration() {
+const HERO_SLIDES = [
+  {
+    title: 'book store',
+    lead: 'Welcome to our bookstore',
+    body: 'Browse available titles, reserve exact copies from live stock, and follow every confirmation step from placement to delivery.',
+    caption: 'Live Book Catalogue & Order Tracking',
+  },
+  {
+    title: 'live stock',
+    lead: 'Real-time availability',
+    body: 'Every title shows current stock levels so you know what is ready to order right away.',
+    caption: 'Verified Inventory Before Checkout',
+  },
+  {
+    title: 'order trail',
+    lead: 'Six transparent order stages',
+    body: 'Track validation, inventory checks, confirmed pricing, payment, and shipping and email notices in one view.',
+    caption: 'Complete Order Visibility',
+  },
+];
+
+function BookStoreEmblem() {
   return (
     <svg
-      width="320"
-      height="196"
-      viewBox="0 0 320 196"
+      width="290"
+      height="210"
+      viewBox="0 0 290 210"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <circle cx="160" cy="48" r="22" fill="#FDE68A" opacity="0.28" />
-      <path d="M160 12V20M184 22L179 27M136 22L141 27M192 48H184M136 48H128" stroke="#FDE68A" strokeWidth="3" strokeLinecap="round" />
-      <path d="M148 47C148 39.8 153.4 34 160 34C166.6 34 172 39.8 172 47C172 52 169 56 165.5 58.6C164.6 59.3 164 60.4 164 61.5V65H156V61.5C156 60.4 155.4 59.3 154.5 58.6C151 56 148 52 148 47Z" fill="#F59E0B" />
-      <rect x="155" y="67" width="10" height="4" rx="2" fill="#D6ECE7" />
+      {/* Stylized "BOOK" wordmark where the two O's are book-filled shopping totes in our palette */}
+      {/* Letter B */}
+      <path
+        d="M22 36H48C60 36 68 43 68 53C68 60 64 65 58 67C65 69 70 75 70 84C70 96 61 104 47 104H22V36ZM34 62H46C52 62 56 59 56 54C56 49 52 46 46 46H34V62ZM34 94H47C54 94 58 90 58 84C58 77 53 73 46 73H34V94Z"
+        fill="#0B7A69"
+      />
 
-      <rect x="24" y="138" width="76" height="18" rx="4" transform="rotate(-8 24 138)" fill="#35235A" />
-      <rect x="30" y="120" width="72" height="17" rx="4" transform="rotate(4 30 120)" fill="#F59E0B" />
-      <rect x="220" y="136" width="76" height="18" rx="4" transform="rotate(7 220 136)" fill="#0F2622" />
-      <rect x="216" y="118" width="72" height="17" rx="4" transform="rotate(-5 216 118)" fill="#D6ECE7" />
+      {/* First Book-Bag "O" with amber & emerald book spines */}
+      <path d="M98 36C98 22 106 14 115 14C124 14 132 22 132 36" stroke="#0B7A69" strokeWidth="4" strokeLinecap="round" />
+      <rect x="87" y="36" width="56" height="68" rx="14" stroke="#0B7A69" strokeWidth="6" fill="#FFFFFF" />
+      <rect x="97" y="48" width="10" height="44" rx="2" fill="#F59E0B" />
+      <rect x="110" y="45" width="10" height="47" rx="2" fill="#0B7A69" />
+      <rect x="123" y="51" width="10" height="41" rx="2" fill="#D6ECE7" />
 
-      <path d="M62 110C62 103 68 98 75 98H146C153 98 159 103 160 110V172C155 167 148 165 140 165H74C67 165 62 160 62 153V110Z" fill="#FFFFFF" />
-      <path d="M258 110C258 103 252 98 245 98H174C167 98 161 103 160 110V172C165 167 172 165 180 165H246C253 165 258 160 258 153V110Z" fill="#F3FAF8" />
-      <path d="M56 155H264V168C264 174 259 178 253 178H67C61 178 56 174 56 168V155Z" fill="#085E52" />
-      <rect x="172" y="164" width="14" height="22" rx="2" fill="#F59E0B" />
-      <path d="M80 118H140M80 132H136M80 146H126" stroke="#C5D4cf" strokeWidth="3" strokeLinecap="round" />
-      <path d="M180 118H240M184 132H240M194 146H240" stroke="#C5D4cf" strokeWidth="3" strokeLinecap="round" />
+      {/* Second Book-Bag "O" with plum & forest book spines */}
+      <path d="M167 36C167 22 175 14 184 14C193 14 201 22 201 36" stroke="#085E52" strokeWidth="4" strokeLinecap="round" />
+      <rect x="156" y="36" width="56" height="68" rx="14" stroke="#085E52" strokeWidth="6" fill="#FFFFFF" />
+      <rect x="166" y="47" width="10" height="45" rx="2" fill="#35235A" />
+      <rect x="179" y="51" width="10" height="41" rx="2" fill="#0B7A69" />
+      <rect x="192" y="44" width="10" height="48" rx="2" fill="#F59E0B" />
+
+      {/* Letter K */}
+      <path
+        d="M229 36H241V66L263 36H277L253 68L278 104H263L244 76L241 80V104H229V36Z"
+        fill="#0B7A69"
+      />
+
+      {/* Condensed "STORE" wordmark below */}
+      <text
+        x="148"
+        y="174"
+        textAnchor="middle"
+        fill="#085E52"
+        fontFamily="Fraunces, Georgia, serif"
+        fontWeight="700"
+        fontSize="58"
+        letterSpacing="6"
+      >
+        STORE
+      </text>
     </svg>
   );
 }
@@ -176,6 +223,10 @@ function FeaturedBookCover({ book }) {
   const palette = getBookPalette(book.bookId);
   const imageSrc = String(book.imageUrl || book.coverImage || '').trim();
 
+  useEffect(() => {
+    setImgFailed(false);
+  }, [imageSrc]);
+
   if (imageSrc && !imgFailed) {
     return (
       <div
@@ -218,6 +269,9 @@ export default function BookCataloguePage() {
   const [stockFilter, setStockFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [carouselPage, setCarouselPage] = useState(0);
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  const activeSlide = HERO_SLIDES[heroSlide] || HERO_SLIDES[0];
 
   const inStockCount = useMemo(
     () => books.filter((b) => Number(b.stockQuantity ?? 0) > 0).length,
@@ -260,42 +314,85 @@ export default function BookCataloguePage() {
 
   return (
     <div>
-      {/* 1. Centered Curved-Arch Hero */}
+      {/* 1. Asymmetric S-Curve Split Hero */}
       <section className="cf-wave-hero" aria-label="Bookstore hero showcase">
         <div className="cf-wave-hero-shape-1" aria-hidden="true" />
         <div className="cf-wave-hero-shape-2" aria-hidden="true" />
-        <div className="cf-hero-float cf-hero-float-left" aria-hidden="true">
-          <BookOpen size={18} />
-        </div>
-        <div className="cf-hero-float cf-hero-float-right" aria-hidden="true">
-          <Lightbulb size={18} />
-        </div>
 
-        <div className="cf-wave-hero-centered">
-          <p className="cf-hero-kicker">OrderFlow Books · Online Catalogue</p>
-          <h1 className="cf-hero-title">Expand your mind, reading a book</h1>
-          <p className="cf-hero-subtitle">
-            Reading great books opens new perspectives. Browse live inventory, build your order, and follow every confirmation step in real time.
-          </p>
+        <svg
+          className="cf-hero-wave-cutout"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M24 0 L100 0 L100 100 L16 100 C-2 74, 18 46, 7 24 C2 12, 13 3, 24 0 Z"
+            fill="#ffffff"
+          />
+        </svg>
 
-          <div className="cf-hero-cta-row">
+        <div className="cf-hero-left-col">
+          <div>
+            <p className="cf-hero-kicker">OrderFlow Books</p>
+            <h1 className="cf-hero-title">{activeSlide.title}</h1>
+            <p className="cf-hero-lead">{activeSlide.lead}</p>
+            <p className="cf-hero-subtitle">{activeSlide.body}</p>
+
+            <div className="cf-hero-cta-row">
+              <button
+                type="button"
+                onClick={scrollToCatalogue}
+                className="cf-hero-white-btn"
+              >
+                <span>Browse Books</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </button>
+              <Link to="/order-lookup" className="cf-hero-outline-btn">
+                <span>Look Up Order</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="cf-hero-tile-row" aria-label="Quick storefront actions">
             <button
               type="button"
+              className="cf-hero-tile"
               onClick={scrollToCatalogue}
-              className="cf-hero-white-btn"
             >
-              <span>Browse Books</span>
+              <BarChart3 size={22} aria-hidden="true" />
+              <span>Catalogue</span>
             </button>
-            <Link to="/order-lookup" className="cf-hero-outline-btn">
-              <span>Look Up Order</span>
+            <Link to="/checkout" className="cf-hero-tile">
+              <PieChart size={22} aria-hidden="true" />
+              <span>Place Order</span>
+            </Link>
+            <Link to="/order-lookup" className="cf-hero-tile">
+              <Check size={22} aria-hidden="true" />
+              <span>Track Order</span>
             </Link>
           </div>
         </div>
 
-        <div className="cf-hero-stage">
-          <OpenBookHeroIllustration />
+        <div className="cf-hero-right-col">
+          <div className="cf-hero-emblem-wrap">
+            <BookStoreEmblem />
+            <span className="cf-hero-emblem-caption">{activeSlide.caption}</span>
+          </div>
+
+          <div className="cf-hero-dots" role="tablist" aria-label="Storefront hero highlights">
+            {HERO_SLIDES.map((slide, index) => (
+              <button
+                key={slide.title}
+                type="button"
+                role="tab"
+                aria-selected={heroSlide === index}
+                aria-label={`Show ${slide.lead}`}
+                className={`cf-hero-dot-btn ${heroSlide === index ? 'active' : ''}`}
+                onClick={() => setHeroSlide(index)}
+              />
+            ))}
+          </div>
         </div>
-        <div className="cf-hero-arch" aria-hidden="true" />
       </section>
 
       {/* 2. Featured / New Arrivals 3-Card Shelf with Working Carousel Controls */}

@@ -1,13 +1,18 @@
 {
-  "name": "react-example",
+  "name": "orderflow-bookstore-workspace",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "OrderFlow Bookstore React + Vite + npm workspace for the Customer Storefront.",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev:customer": "npm --prefix orderflow-bookstore/customer-frontend run dev",
+    "install:all": "npm install && npm --prefix orderflow-bookstore/customer-frontend install",
     "build": "vite build",
+    "build:customer": "npm --prefix orderflow-bookstore/customer-frontend run build",
+    "build:all": "npm run build && npm run build:customer",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist server.js orderflow-bookstore/customer-frontend/dist",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
@@ -29,7 +34,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",

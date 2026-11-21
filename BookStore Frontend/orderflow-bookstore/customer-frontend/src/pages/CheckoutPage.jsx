@@ -1,17 +1,15 @@
 import { ArrowLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { extractApiError } from '../api/axiosClient';
 import { createOrder } from '../api/orderApi';
 import ErrorMessage from '../components/ErrorMessage';
 import OrderForm from '../components/OrderForm';
-import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useBooks } from '../hooks/useBooks';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
   const { items, estimatedTotal, addItem, updateQuantity, removeItem, clearCart } = useCart();
   const {
     books: availableBooks,
@@ -20,15 +18,8 @@ export default function CheckoutPage() {
     refetch: refetchBooks,
   } = useBooks();
 
-  const [fullName, setFullName] = useState(() => currentUser?.fullName || '');
-  const [email, setEmail] = useState(() => currentUser?.email || '');
-
-  useEffect(() => {
-    if (currentUser) {
-      setFullName((prev) => prev || currentUser.fullName || '');
-      setEmail((prev) => prev || currentUser.email || '');
-    }
-  }, [currentUser]);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
