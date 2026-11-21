@@ -97,6 +97,13 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public OrderResponse getOrderByReference(String orderReference) {
+        return orderRepository.findByOrderReferenceIgnoreCase(orderReference)
+                .map(OrderResponse::from)
+                .orElseThrow(() -> new OrderNotFoundException(orderReference));
+    }
+
+    @Transactional(readOnly = true)
     public List<AuditEventResponse> getAuditTimeline(Long orderId) {
         requireOrder(orderId);
         return auditLogRepository.findTimelineByOrderId(orderId)

@@ -24,7 +24,7 @@ public class HostedPaymentService {
     public HostedPaymentService(
             FapshiApiClient fapshiApiClient,
             ExchangeRateService exchangeRateService,
-            @Value("${app.frontend.base-url: https://subtarsal-kathyrn-untreated.ngrok-free.dev}") String frontendBaseUrl
+            @Value("${app.frontend.base-url:https://subtarsal-kathyrn-untreated.ngrok-free.dev}") String frontendBaseUrl
     ) {
         this.fapshiApiClient = fapshiApiClient;
         this.exchangeRateService = exchangeRateService;

@@ -11,7 +11,7 @@ Spring Boot REST API; it never connects directly to MySQL.
 
 | Tier | Project location | Local address | Responsibility |
 | --- | --- | --- | --- |
-| React/Vite frontend | [Frontend](../stacks/Frontend/) | Vite's printed URL, normally `http://localhost:6000` | Book catalogue, customer/order form, result and audit monitor |
+| React/Vite storefront | [Frontend](../stacks/Frontend/) | `http://localhost:7000` | Customer catalogue, checkout, payment handoff, order lookup and audit monitor |
 | Java/Spring Boot backend | [Backend](../stacks/Backend/) | `http://localhost:8080` | REST API, validation, order pipeline, audit decorator, completion observers |
 | MySQL database | [Database](../stacks/Database/) | `localhost:3306` | Customers, books, orders, items, audit events, notifications |
 
@@ -25,6 +25,11 @@ and configuration.
 - IntelliJ IDEA with Maven support, or Apache Maven 3.9+
 - Docker Desktop with Docker Compose
 - Node.js 20+ and npm (only needed to run the React frontend)
+
+To run the customer storefront, open PowerShell in `stacks/Frontend`, run
+`npm ci`, then `npm run dev`. The Vite server listens on port `7000` and proxies `/api` and
+`/fapshi_demo` to the backend on port `8080`. The browser never connects
+directly to MySQL.
 
 ## 3. Start MySQL
 
@@ -137,13 +142,14 @@ needed:
 | `DB_USERNAME` | `root` | MySQL user; use `order_app` with the project's Compose database |
 | `DB_PASSWORD` | (blank; set locally) | MySQL password, supplied through the run configuration |
 | `SIMULATE_PAYMENT_FAILURE` | `false` | Set to `true` to make the simulated payment stage fail |
-| `FRONTEND_ORIGIN` | `http://localhost:6000,http://localhost:5000,https://subtarsal-kathyrn-untreated.ngrok-free.dev` | Comma-separated browser origins allowed by the API's CORS configuration; setting it replaces this default list |
+| `FRONTEND_ORIGIN` | `http://localhost:7000,https://subtarsal-kathyrn-untreated.ngrok-free.dev` | Comma-separated browser origins allowed by the API's CORS configuration; setting it replaces this default list |
 | `FAPSHI_API_USER` | From `stacks/Backend/.env` | Fapshi sandbox `apiuser` header |
 | `FAPSHI_API_SECRET` | From `stacks/Backend/.env` | Fapshi sandbox `apikey` header |
 | `FAPSHI_API_BASE_URL` | `https://sandbox.fapshi.com` | Fapshi API environment |
 | `FAPSHI_WEBHOOK_SECRET` | Set privately to the same value configured in the Fapshi dashboard | Verifies the `x-wh-secret` callback header; callbacks are rejected when missing |
 | `FRONTEND_BASE_URL` | `https://subtarsal-kathyrn-untreated.ngrok-free.dev` | Browser return URL after hosted checkout; override only if using another public frontend URL |
-| `EXCHANGE_RATE_API_URL` | `https://open.er-api.com/v6/latest/USD` | USD/XAF exchange-rate source |
+| `EXCHANGE_RATE_API_URL` | `https://open.er-api.com/v6/latest/USD` | Primary USD/XAF exchange-rate source |
+| `EXCHANGE_RATE_FALLBACK_API_URL` | `https://latest.currency-api.pages.dev/v1/currencies/usd.json` | Fallback USD/XAF source used when the primary is unavailable or invalid |
 
 ### Test Fapshi directly with Postman
 
@@ -236,8 +242,10 @@ camelCase.
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/books` | List the catalogue and current stock |
+| `GET` | `/api/exchange-rate/usd-xaf` | Return the current backend USD/XAF rate and provider update time |
 | `POST` | `/api/orders` | Validate an order, create Fapshi hosted checkout, and return a pending order |
 | `GET` | `/api/orders/{orderId}` | Retrieve the order result |
+| `GET` | `/api/orders/reference/{orderReference}` | Retrieve an order using its public reference |
 | `POST` | `/api/orders/{orderId}/reconcile-payment` | Check the pending transaction with Fapshi and return the updated order |
 | `GET` | `/api/orders/{orderId}/audit` | Retrieve audit events in chronological order |
 | `GET` | `/api/orders/{orderId}/notifications` | Retrieve shipping/email outcomes |
@@ -261,7 +269,19 @@ Returns an array of books:
 
 Use the returned `id` values when creating an order. The backend retrieves the
 authoritative price and stock from MySQL; the client must not submit a price or
-order total.
+order total. The storefront maps the backend's `id` field to its local
+`bookId` field before cart operations.
+
+The database already models the Order-to-Book many-to-many relationship with
+`order_items`: each row links one order to one book and stores its quantity and
+authoritative price. An order can contain multiple different books, and a book
+can appear in many orders; no schema migration is required for this frontend
+integration.
+
+`GET /api/exchange-rate/usd-xaf` returns `baseCurrency`, `quoteCurrency`,
+`rate`, and `updatedAt`. Checkout uses this backend-provided rate for an
+indicative XAF estimate; the submitted order's `paymentAmountXaf` remains the
+authoritative amount.
 
 ### `POST /api/orders`
 
@@ -299,14 +319,31 @@ using the daily USD/XAF rate, then returns the exact amount and rate used:
   "paymentLink": "https://pay.fapshi.com/checkout/example",
   "paymentAmountXaf": 50808,
   "exchangeRateUsdXaf": 597.73771100,
-  "paymentMessage": "Fapshi checkout created; awaiting payment confirmation."
+  "paymentMessage": "Fapshi checkout created; awaiting payment confirmation.",
+  "items": [
+    {
+      "bookId": 1,
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "quantity": 2,
+      "unitPrice": 42.50,
+      "lineTotal": 85.00
+    }
+  ]
 }
 ```
 
 The backend rounds to the nearest whole XAF (`HALF_UP`) and enforces Fapshi's
-100 XAF minimum. The exchange-rate response is cached until its next update;
-if the provider is unavailable, a cached rate is used only while it is at most
-24 hours old. If no usable rate is available, no payment request is sent.
+100 XAF minimum. It tries the primary exchange-rate provider, then the
+independent daily-rate fallback. The backend checks for updated rates on
+startup, every six hours, and when a requested rate has reached its provider
+refresh time. Because these free sources update daily and can publish after
+midnight, a validated rate up to 36 hours old is accepted. Rate age is based
+on the provider's published update date, not the time the backend fetched it.
+If both providers fail, a cached rate is used only within that same freshness
+limit. If neither source provides a usable rate and no sufficiently recent
+rate is cached, checkout is stopped rather than using a hard-coded or
+indefinitely stale conversion rate.
 
 The reference and timestamps are generated at runtime. The customer continues
 to the hosted Fapshi page to choose MTN Mobile Money or Orange Money and enter
@@ -348,8 +385,8 @@ order and payment `FAILED` and do not trigger completion notifications.
 
 Configure the Fapshi dashboard webhook as
 `https://subtarsal-kathyrn-untreated.ngrok-free.dev/fapshi_demo/webhook` when
-ngrok forwards to the Vite server on port 6000. Vite proxies that path to the
-backend. Set the same dashboard webhook secret in the private
+ngrok forwards to the customer storefront's Vite server on port 7000. Vite
+proxies that path to the backend. Set the same dashboard webhook secret in the private
 `FAPSHI_WEBHOOK_SECRET` setting. The backend compares `x-wh-secret` in constant
 time, matches the callback's transaction ID, order reference, and XAF amount
 to the stored order, then uses Fapshi's payment-status response as the
@@ -363,6 +400,10 @@ seconds while the order remains pending. This rechecks the provider so a
 delayed webhook or temporary status-API outage does not leave the UI stale.
 The endpoint limits checks for a transaction to one every 15 seconds to stay
 within Fapshi's per-transaction status-query limit.
+
+The storefront reads the `orderId` query parameter on Fapshi's return to the
+site, opens that order's status page, and reconciles payment with the backend.
+It never treats the redirect itself as a successful payment.
 
 The Fapshi sandbox simulates a successful or failed payment after the user
 enters a test number and proceeds; it does not charge real money. Its

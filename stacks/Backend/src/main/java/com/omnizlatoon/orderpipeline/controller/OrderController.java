@@ -34,6 +34,11 @@ public class OrderController {
         return orderService.createOrder(request);
     }
 
+    @GetMapping("/reference/{orderReference}")
+    public OrderResponse getOrderByReference(@PathVariable String orderReference) {
+        return orderService.getOrderByReference(orderReference);
+    }
+
     @GetMapping("/{orderId}")
     public OrderResponse getOrder(@PathVariable Long orderId) {
         return orderService.getOrder(orderId);

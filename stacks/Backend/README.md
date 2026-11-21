@@ -19,17 +19,33 @@ Set these environment variables in the IntelliJ run configuration to override lo
 - `FRONTEND_ORIGIN` to set the allowed development origin(s), comma-separated
 - `FRONTEND_BASE_URL` to override the default ngrok browser URL Fapshi returns to after checkout
 - `FAPSHI_WEBHOOK_SECRET` to verify Fapshi's `x-wh-secret` notification header
-- `EXCHANGE_RATE_API_URL` to override the USD/XAF rate API
+- `EXCHANGE_RATE_API_URL` to override the primary USD/XAF rate API
+- `EXCHANGE_RATE_FALLBACK_API_URL` to override the fallback USD/XAF rate API
 
-Hosted checkout converts the server-calculated USD total to whole XAF using the
-daily rate from Open ER API, then waits in `PENDING` for a verified Fapshi
+Hosted checkout converts the server-calculated USD total to whole XAF using
+Open ER API with a daily-rate fallback, then waits in `PENDING` for a verified Fapshi
 webhook whose transaction ID, order reference, and XAF amount match the order.
+The backend checks for rate updates on startup, every six hours, and on demand.
+The validated rate may be up to 36 hours old to accommodate delayed daily
+provider updates; freshness uses the provider's published update date and is
+not reset just by fetching the same old value. The pipeline fails safely if
+no rate within that limit is available.
 Only a matching `SUCCESSFUL` response from Fapshi's payment-status endpoint
 sets `paymentStatus=SUCCESS` and permits the final order stages to complete.
 The callback status or browser redirect alone is never treated as proof of
 payment. After checkout returns, the frontend rechecks pending orders through
 `POST /api/orders/{orderId}/reconcile-payment`; temporary provider errors leave
 the order pending and are retried.
+
+The customer storefront in `stacks/Frontend` runs on port `7000` and proxies
+`/api` and `/fapshi_demo` to this backend.
+It uses `GET /api/exchange-rate/usd-xaf` for the checkout estimate and
+`GET /api/orders/reference/{orderReference}` for reference-based lookup.
+Order responses include their order-item lines; the existing `order_items`
+table is the join entity implementing the Order-to-Book many-to-many relation.
+`FRONTEND_BASE_URL` defaults to
+`https://subtarsal-kathyrn-untreated.ngrok-free.dev`, so Fapshi redirects to
+the storefront with the order ID in the query string.
 
 Run backend tests with `mvn test`.
 

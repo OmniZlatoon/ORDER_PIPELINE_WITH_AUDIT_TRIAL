@@ -1,18 +1,27 @@
-# Frontend
+# OrderFlow Books storefront
 
-React/Vite single-page application for the book catalogue, order form, and six-stage processing monitor.
+The customer storefront is a React/Vite application connected to the Spring
+Boot API.
+
+## Run locally
+
+From this directory:
 
 ```powershell
-npm install
+npm ci
 npm run dev
 ```
 
-Vite proxies `/api` and `/fapshi_demo` requests to `http://localhost:8080`. Start MySQL and the Spring Boot backend first. Set `VITE_API_BASE_URL` only when using a different API origin.
+Vite serves the app at `http://localhost:7000` and proxies `/api` and
+`/fapshi_demo` to `http://localhost:8080`. Copy `.env.example` to `.env` only
+when you need a custom API base URL; keep local environment files private.
 
-The development server uses `http://localhost:6000` by default. After an order
-is created, the payment panel offers Fapshi-hosted checkout. The payer enters
-their email and Mobile Money details on Fapshi's page before proceeding.
-After checkout, the app asks the backend to reconcile the transaction with
-Fapshi and refreshes the six-stage audit timeline and observer outcomes.
-The order remains pending until Fapshi's payment-status endpoint confirms
-success; a webhook or browser redirect alone is not treated as payment proof.
+## Fapshi return
+
+The backend creates hosted checkout with the configured frontend base URL.
+`FRONTEND_BASE_URL` defaults to
+`https://subtarsal-kathyrn-untreated.ngrok-free.dev`. When using this ngrok
+hostname, forward its traffic to the Vite server on port `7000`. Fapshi returns
+to the frontend with `?orderId=<id>`; the storefront opens the order status
+page and asks the backend to verify the payment. A redirect by itself never
+marks an order as paid.

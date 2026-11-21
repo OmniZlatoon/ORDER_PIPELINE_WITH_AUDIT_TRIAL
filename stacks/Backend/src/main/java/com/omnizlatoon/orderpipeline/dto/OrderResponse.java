@@ -4,6 +4,7 @@ import com.omnizlatoon.orderpipeline.entity.Order;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record OrderResponse(
         Long orderId,
@@ -17,7 +18,8 @@ public record OrderResponse(
         String paymentLink,
         Long paymentAmountXaf,
         BigDecimal exchangeRateUsdXaf,
-        String paymentMessage
+        String paymentMessage,
+        List<OrderItemResponse> items
 ) {
     public static OrderResponse from(Order order) {
         return new OrderResponse(
@@ -32,7 +34,8 @@ public record OrderResponse(
                 order.getPaymentLink(),
                 order.getPaymentAmountXaf(),
                 order.getExchangeRateUsdXaf(),
-                order.getPaymentAuditMessage()
+                order.getPaymentAuditMessage(),
+                order.getItems().stream().map(OrderItemResponse::from).toList()
         );
     }
 }
