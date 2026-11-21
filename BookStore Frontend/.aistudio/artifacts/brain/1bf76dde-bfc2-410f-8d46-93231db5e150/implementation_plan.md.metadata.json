@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan for replacing all technical jargon (MySQL, Java, Spring Boot, REST API, endpoint URLs, and internal pattern names) across both Customer and Administrator interfaces with clear, stakeholder-friendly captions and messages.",
+  "updatedAt":  "2026-11-18T21:56:21.537601602Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}
