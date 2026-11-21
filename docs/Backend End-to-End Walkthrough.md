@@ -11,7 +11,8 @@ Spring Boot REST API; it never connects directly to MySQL.
 
 | Tier | Project location | Local address | Responsibility |
 | --- | --- | --- | --- |
-| React/Vite storefront | [Frontend](../stacks/Frontend/) | `http://localhost:7000` | Customer catalogue, checkout, payment handoff, order lookup and audit monitor |
+| React/Vite reference client | [Frontend](../stacks/Frontend/) | `http://localhost:5173` | Reference order form and processing monitor |
+| React/Vite customer storefront | [OrderFlow Frontend](../BookStore%20Frontend/orderflow-bookstore/Frontend/) | `http://localhost:5174` | Customer catalogue, checkout, payment handoff, order lookup and audit monitor |
 | Java/Spring Boot backend | [Backend](../stacks/Backend/) | `http://localhost:8080` | REST API, validation, order pipeline, audit decorator, completion observers |
 | MySQL database | [Database](../stacks/Database/) | `localhost:3306` | Customers, books, orders, items, audit events, notifications |
 
@@ -26,10 +27,12 @@ and configuration.
 - Docker Desktop with Docker Compose
 - Node.js 20+ and npm (only needed to run the React frontend)
 
-To run the customer storefront, open PowerShell in `stacks/Frontend`, run
-`npm ci`, then `npm run dev`. The Vite server listens on port `7000` and proxies `/api` and
-`/fapshi_demo` to the backend on port `8080`. The browser never connects
-directly to MySQL.
+To run the customer storefront, open PowerShell in
+`BookStore Frontend/orderflow-bookstore/Frontend`, run `npm ci`, then
+`npm run dev`. The Vite server listens on port `5174` and proxies `/api` and
+`/fapshi_demo` to the backend on port `8080`. The reference client in
+`stacks/Frontend` runs on port `5173`. The browser never connects directly to
+MySQL.
 
 ## 3. Start MySQL
 
@@ -142,7 +145,7 @@ needed:
 | `DB_USERNAME` | `root` | MySQL user; use `order_app` with the project's Compose database |
 | `DB_PASSWORD` | (blank; set locally) | MySQL password, supplied through the run configuration |
 | `SIMULATE_PAYMENT_FAILURE` | `false` | Set to `true` to make the simulated payment stage fail |
-| `FRONTEND_ORIGIN` | `http://localhost:7000,https://subtarsal-kathyrn-untreated.ngrok-free.dev` | Comma-separated browser origins allowed by the API's CORS configuration; setting it replaces this default list |
+| `FRONTEND_ORIGIN` | `http://localhost:5174,https://subtarsal-kathyrn-untreated.ngrok-free.dev` | Comma-separated browser origins allowed by the API's CORS configuration; setting it replaces this default list |
 | `FAPSHI_API_USER` | From `stacks/Backend/.env` | Fapshi sandbox `apiuser` header |
 | `FAPSHI_API_SECRET` | From `stacks/Backend/.env` | Fapshi sandbox `apikey` header |
 | `FAPSHI_API_BASE_URL` | `https://sandbox.fapshi.com` | Fapshi API environment |
@@ -385,7 +388,7 @@ order and payment `FAILED` and do not trigger completion notifications.
 
 Configure the Fapshi dashboard webhook as
 `https://subtarsal-kathyrn-untreated.ngrok-free.dev/fapshi_demo/webhook` when
-ngrok forwards to the customer storefront's Vite server on port 7000. Vite
+ngrok forwards to the customer storefront's Vite server on port 5174. Vite
 proxies that path to the backend. Set the same dashboard webhook secret in the private
 `FAPSHI_WEBHOOK_SECRET` setting. The backend compares `x-wh-secret` in constant
 time, matches the callback's transaction ID, order reference, and XAF amount
@@ -494,7 +497,7 @@ back to `false` and restart to test hosted checkout.
 In another PowerShell terminal:
 
 ```powershell
-Set-Location stacks\Frontend
+Set-Location "BookStore Frontend\orderflow-bookstore\Frontend"
 npm install
 npm run dev
 ```

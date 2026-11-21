@@ -37,8 +37,9 @@ payment. After checkout returns, the frontend rechecks pending orders through
 `POST /api/orders/{orderId}/reconcile-payment`; temporary provider errors leave
 the order pending and are retried.
 
-The customer storefront in `stacks/Frontend` runs on port `7000` and proxies
-`/api` and `/fapshi_demo` to this backend.
+The customer storefront in
+`BookStore Frontend/orderflow-bookstore/Frontend` runs on port `5174` and
+proxies `/api` and `/fapshi_demo` to this backend.
 It uses `GET /api/exchange-rate/usd-xaf` for the checkout estimate and
 `GET /api/orders/reference/{orderReference}` for reference-based lookup.
 Order responses include their order-item lines; the existing `order_items`
