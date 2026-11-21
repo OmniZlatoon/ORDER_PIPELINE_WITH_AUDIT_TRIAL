@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { createOrder, getBooks, getOrderAudit, getOrderNotifications } from "./api.js";
+import { createOrder, getBooks, getOrderAudit, getOrderNotifications, reconcilePayment } from "./api.js";
 
 const STAGES = [
-  "Validate Order",
-  "Check Inventory",
-  "Calculate Total",
-  "Process Payment",
-  "Confirm Order",
-  "Complete Order",
+  "VALIDATE ORDER",
+  "CHECK INVENTORY",
+  "CALCULATE TOTAL",
+  "PROCESS PAYMENT",
+  "CONFIRM ORDER",
+  "COMPLETE ORDER",
 ];
 
 const money = new Intl.NumberFormat(undefined, {
   style: "currency",
   currency: "USD",
+});
+
+const moneyXaf = new Intl.NumberFormat(undefined, {
+  style: "currency",
+  currency: "XAF",
+  maximumFractionDigits: 0,
 });
 
 function App() {
@@ -25,12 +31,60 @@ function App() {
   const [error, setError] = useState("");
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [openingCheckout, setOpeningCheckout] = useState(false);
 
   useEffect(() => {
     getBooks()
       .then(setBooks)
       .catch((cause) => setError(cause.message))
       .finally(() => setLoadingBooks(false));
+  }, []);
+
+  useEffect(() => {
+    const orderId = new URLSearchParams(window.location.search).get("orderId");
+    if (!orderId || !/^\d+$/.test(orderId)) return undefined;
+
+    let active = true;
+    let timeoutId;
+    let timelineLoaded = false;
+    async function refreshOrder() {
+      try {
+        const order = await reconcilePayment(orderId);
+        if (!active) return;
+        const storedPaymentLink = sessionStorage.getItem(`fapshi-checkout-${order.orderId}`);
+        setResult({ ...order, paymentLink: storedPaymentLink ?? undefined });
+        setError("");
+        const pending = order.paymentStatus === "PENDING";
+        if (!pending) sessionStorage.removeItem(`fapshi-checkout-${order.orderId}`);
+        setCheckingPayment(pending);
+        if (!pending || !timelineLoaded) {
+          const [auditEvents, notificationRecords] = await Promise.all([
+            getOrderAudit(order.orderId),
+            getOrderNotifications(order.orderId),
+          ]);
+          if (!active) return;
+          setAudit(auditEvents);
+          setNotifications(notificationRecords);
+          timelineLoaded = true;
+        }
+        if (pending) {
+          timeoutId = window.setTimeout(refreshOrder, 20000);
+        }
+      } catch {
+        if (active) {
+          setCheckingPayment(true);
+          setError("Payment status could not be verified yet. Checking again automatically…");
+          timeoutId = window.setTimeout(refreshOrder, 20000);
+        }
+      }
+    }
+
+    refreshOrder();
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   const selectedItems = useMemo(
@@ -48,11 +102,16 @@ function App() {
 
     try {
       const order = await createOrder({ customer, items: selectedItems });
+      if (order.paymentLink) {
+        sessionStorage.setItem(`fapshi-checkout-${order.orderId}`, order.paymentLink);
+      }
+      setResult(order);
+      setAudit([]);
+      setNotifications([]);
       const [auditEvents, notificationRecords] = await Promise.all([
         getOrderAudit(order.orderId),
         getOrderNotifications(order.orderId),
       ]);
-      setResult(order);
       setAudit(auditEvents);
       setNotifications(notificationRecords);
     } catch (cause) {
@@ -174,12 +233,64 @@ function App() {
               {submitting ? "Processing order…" : "Place order"}
               <span aria-hidden="true">↗</span>
             </button>
-            <p className="secure-note">Payment, shipping and email are simulated for this demonstration.</p>
+            <p className="secure-note">Fapshi handles payment. Shipping and email outcomes are recorded as demo notifications.</p>
           </form>
         </aside>
       </div>
 
       {error && <div className="alert error-alert" role="alert">{error}</div>}
+
+      {result?.paymentStatus === "PENDING" && (
+        <section className="payment-panel panel" aria-live="polite">
+          <div>
+            <p className="eyebrow">SECURE MOBILE MONEY CHECKOUT</p>
+            <h2>Complete your payment</h2>
+            <p>
+              Continue to Fapshi to enter your email and Mobile Money details, then
+              proceed with payment. We’ll complete this order only after Fapshi confirms success.
+            </p>
+          </div>
+          <div className="payment-methods" aria-label="Accepted payment methods">
+            <div className="payment-method payment-mtn">
+              <span className="mtn-mark" aria-hidden="true">MTN</span>
+              <span>Mobile Money</span>
+            </div>
+            <div className="payment-method payment-orange">
+              <span className="orange-mark" aria-hidden="true">orange</span>
+              <span>Orange Money</span>
+            </div>
+          </div>
+          <div className="payment-action">
+            <div>
+              <span>Amount due</span>
+              <strong>{result.paymentAmountXaf == null ? "Unavailable" : moneyXaf.format(result.paymentAmountXaf)}</strong>
+              {result.exchangeRateUsdXaf != null && (
+                <small>USD/XAF rate: {Number(result.exchangeRateUsdXaf).toFixed(4)}</small>
+              )}
+            </div>
+            {result.paymentLink ? (
+              <button
+                className="submit-button checkout-button"
+                type="button"
+                disabled={openingCheckout}
+                onClick={() => {
+                  setOpeningCheckout(true);
+                  window.location.assign(result.paymentLink);
+                }}
+              >
+                {openingCheckout ? "Opening secure checkout…" : "Continue to Fapshi checkout"}
+                <span aria-hidden="true">↗</span>
+              </button>
+            ) : (
+              <p className="payment-pending-message">
+                {result.paymentMessage ?? (checkingPayment
+                  ? "Waiting for Fapshi to confirm your payment…"
+                  : "Payment is still pending. Refresh this page to check again.")}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {result && (
         <section className="monitor panel" aria-live="polite">
@@ -198,6 +309,13 @@ function App() {
             <div><span>ORDER TOTAL</span><strong>{money.format(result.totalAmount)}</strong></div>
             <div><span>PAYMENT</span><strong>{result.paymentStatus}</strong></div>
           </div>
+          {result.paymentStatus === "FAILED" && (
+            <div className="alert error-alert" role="alert">
+              {audit.find((entry) =>
+                entry.stepName === "PROCESS PAYMENT" && entry.executionStatus === "FAILED")?.message
+                ?? "Payment failed. Please place a new order and try again."}
+            </div>
+          )}
 
           <div className="monitor-columns">
             <div className="timeline-section">

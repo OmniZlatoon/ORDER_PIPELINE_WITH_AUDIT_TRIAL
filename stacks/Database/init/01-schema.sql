@@ -31,10 +31,14 @@ CREATE TABLE IF NOT EXISTS orders (
   total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   order_status VARCHAR(30) NOT NULL,
   payment_status VARCHAR(30) NOT NULL,
+  fapshi_transaction_id VARCHAR(100) NULL,
+  payment_amount_xaf BIGINT NULL,
+  exchange_rate_usd_xaf DECIMAL(18,8) NULL,
   created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   completed_at DATETIME(6) NULL,
   PRIMARY KEY (order_id),
   UNIQUE KEY uk_orders_reference (order_reference),
+  UNIQUE KEY uk_orders_fapshi_transaction_id (fapshi_transaction_id),
   CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id)
     REFERENCES customers (customer_id),
   CONSTRAINT chk_orders_total CHECK (total_amount >= 0)

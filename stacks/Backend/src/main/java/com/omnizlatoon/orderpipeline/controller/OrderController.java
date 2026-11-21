@@ -4,6 +4,7 @@ import com.omnizlatoon.orderpipeline.dto.AuditEventResponse;
 import com.omnizlatoon.orderpipeline.dto.CreateOrderRequest;
 import com.omnizlatoon.orderpipeline.dto.NotificationResponse;
 import com.omnizlatoon.orderpipeline.dto.OrderResponse;
+import com.omnizlatoon.orderpipeline.service.FapshiWebhookService;
 import com.omnizlatoon.orderpipeline.service.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,9 +21,11 @@ import java.util.List;
 @RequestMapping("/api/orders")
 public class OrderController {
     private final OrderService orderService;
+    private final FapshiWebhookService fapshiWebhookService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, FapshiWebhookService fapshiWebhookService) {
         this.orderService = orderService;
+        this.fapshiWebhookService = fapshiWebhookService;
     }
 
     @PostMapping
@@ -33,6 +36,12 @@ public class OrderController {
 
     @GetMapping("/{orderId}")
     public OrderResponse getOrder(@PathVariable Long orderId) {
+        return orderService.getOrder(orderId);
+    }
+
+    @PostMapping("/{orderId}/reconcile-payment")
+    public OrderResponse reconcilePayment(@PathVariable Long orderId) {
+        fapshiWebhookService.reconcileOrder(orderId);
         return orderService.getOrder(orderId);
     }
 

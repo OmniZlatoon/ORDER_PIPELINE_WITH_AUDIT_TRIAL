@@ -92,6 +92,20 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .secure-note { margin: 12px 0 0; color: #98a19b; font-size: 9px; line-height: 1.5; text-align: center; }
 .alert { margin-top: 20px; padding: 13px 15px; border-radius: 7px; font-size: 12px; }
 .error-alert { border: 1px solid #eed1c9; background: #fff8f5; color: #a04431; }
+.payment-panel { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px 34px; align-items: center; margin-top: 20px; padding: 23px 26px; }
+.payment-panel h2 { margin: 0; font: 600 23px/1.2 var(--serif); }
+.payment-panel p:not(.eyebrow) { margin: 9px 0 0; color: #68746d; font-size: 11px; line-height: 1.65; }
+.payment-methods { display: flex; justify-content: flex-end; gap: 10px; }
+.payment-method { min-width: 128px; display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; color: #53635a; font-size: 9px; font-weight: 600; }
+.mtn-mark { display: grid; place-items: center; width: 44px; height: 31px; border-radius: 50% 50% 43% 43%; background: #ffcb05; color: #111; font-size: 9px; font-weight: 900; letter-spacing: -.05em; }
+.orange-mark { display: grid; place-items: center; width: 44px; height: 31px; border-radius: 2px; background: #f26522; color: #fff; font: 700 8px Arial, sans-serif; }
+.payment-action { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.payment-action > div { display: flex; flex-direction: column; gap: 4px; }
+.payment-action > div > span, .payment-action small { color: #879189; font: 9px var(--mono); }
+.payment-action strong { color: var(--ink); font: 600 17px var(--mono); }
+.payment-action small { font-size: 8px; }
+.checkout-button { width: auto; min-width: 230px; }
+.payment-pending-message { max-width: 280px; text-align: right; }
 
 .monitor { margin-top: 22px; padding: 30px; }
 .monitor-heading { align-items: flex-start; }
@@ -158,6 +172,10 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   .hero-stamp { width: 86px; height: 86px; font-size: 7px; }
   .hero-stamp strong { font-size: 23px; }
   .workspace { grid-template-columns: 1fr; }
+  .payment-panel { grid-template-columns: 1fr; padding: 20px; }
+  .payment-methods { justify-content: flex-start; }
+  .payment-action { align-items: flex-start; flex-direction: column; }
+  .checkout-button { width: 100%; }
   .order-panel { position: static; }
   .monitor-columns { grid-template-columns: 1fr; gap: 20px; }
   .activity-section { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 16px; }

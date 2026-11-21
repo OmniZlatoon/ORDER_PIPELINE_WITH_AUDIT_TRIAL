@@ -1,6 +1,7 @@
 package com.omnizlatoon.orderpipeline.pattern.template;
 
 import com.omnizlatoon.orderpipeline.entity.Order;
+import com.omnizlatoon.orderpipeline.entity.PaymentStatus;
 import com.omnizlatoon.orderpipeline.pattern.decorator.AuditDecorator;
 import com.omnizlatoon.orderpipeline.pattern.decorator.OrderStep;
 import com.omnizlatoon.orderpipeline.service.AuditService;
@@ -19,6 +20,13 @@ public abstract class OrderProcessingTemplate {
         runStep(order, "Check Inventory", this::checkInventory);
         runStep(order, "Calculate Total", this::calculateTotal);
         runStep(order, "Process Payment", this::processPayment);
+        if (order.getPaymentStatus() == PaymentStatus.PENDING) {
+            return;
+        }
+        completeSuccessfulPayment(order);
+    }
+
+    public final void completeSuccessfulPayment(Order order) {
         runStep(order, "Confirm Order", this::confirmOrder);
         runStep(order, "Complete Order", this::completeOrder);
     }

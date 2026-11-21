@@ -21,8 +21,8 @@ class AuditDecoratorTest {
         decorator.execute(order);
 
         org.junit.jupiter.api.Assertions.assertTrue(executed[0]);
-        verify(auditService).record(order, "Validate Order", AuditExecutionStatus.STARTED, "Validate Order started");
-        verify(auditService).record(order, "Validate Order", AuditExecutionStatus.SUCCESS, "Validate Order completed");
+        verify(auditService).record(order, "VALIDATE ORDER", AuditExecutionStatus.STARTED, "VALIDATE ORDER started");
+        verify(auditService).record(order, "VALIDATE ORDER", AuditExecutionStatus.SUCCESS, "VALIDATE ORDER completed");
     }
 
     @Test
@@ -37,7 +37,7 @@ class AuditDecoratorTest {
         RuntimeException thrown = assertThrows(RuntimeException.class, () -> decorator.execute(order));
 
         assertSame(failure, thrown);
-        verify(auditService).record(order, "Check Inventory", AuditExecutionStatus.STARTED, "Check Inventory started");
-        verify(auditService).record(order, "Check Inventory", AuditExecutionStatus.FAILED, "Inventory unavailable");
+        verify(auditService).record(order, "CHECK INVENTORY", AuditExecutionStatus.STARTED, "CHECK INVENTORY started");
+        verify(auditService).record(order, "CHECK INVENTORY", AuditExecutionStatus.FAILED, "Inventory unavailable");
     }
 }

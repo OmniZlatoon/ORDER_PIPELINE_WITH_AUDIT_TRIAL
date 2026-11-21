@@ -89,7 +89,7 @@ class PaymentFailureIntegrationTest {
         assertNotNull(audit);
         assertEquals(8, audit.length);
         assertEquals("FAILED", audit[7].executionStatus());
-        assertEquals("Process Payment", audit[7].stepName());
+        assertEquals("PROCESS PAYMENT", audit[7].stepName());
 
         NotificationResponse[] notifications = restTemplate.getForObject(
                 "/api/orders/{orderId}/notifications",
