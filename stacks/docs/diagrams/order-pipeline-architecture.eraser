@@ -1,0 +1,68 @@
+direction right
+colorMode pastel
+styleMode shadow
+typeface clean
+
+Customer [icon: user]
+
+Client Applications {
+  Bookstore Frontend [icon: react, label: "Bookstore / OrderFlow frontend :5174"]
+}
+
+Order Pipeline Backend [icon: spring, color: green] {
+  REST API [icon: api, label: "Spring Boot REST API :8080"]
+  Order Service [icon: settings, label: "OrderService"]
+  Six Step Processor [icon: settings, label: "Template + Audit Decorator"]
+  Hosted Payment Service [icon: settings, label: "HostedPaymentService"]
+  Webhook and Reconciliation [icon: settings, label: "Webhook validation + status reconciliation"]
+  Observer Events [icon: settings, label: "After-commit completion event"]
+  Shipping Observer [icon: settings]
+  Email Observer [icon: settings]
+  Notification Service [icon: settings]
+}
+
+MySQL 8 [icon: mysql, color: blue] {
+  Customers [icon: database]
+  Books [icon: database]
+  Orders [icon: database]
+  Order Items [icon: database]
+  Audit Logs [icon: database]
+  Notifications [icon: database]
+}
+
+External Services {
+  Fapshi Hosted Checkout [icon: payment, label: "Fapshi API + hosted Mobile Money checkout"]
+  USD XAF Primary Rate [icon: globe, label: "Open ER API"]
+  USD XAF Fallback Rate [icon: globe, label: "Daily currency API"]
+  Customer Browser Return [icon: globe, label: "Configured frontend return URL"]
+}
+
+Customer > Bookstore Frontend: browse, place order, checkout, monitor
+Bookstore Frontend > REST API: /api and /fapshi_demo via Vite proxy
+REST API > Order Service: order, catalogue, audit, notification endpoints
+Order Service > Six Step Processor: transactional order creation
+Six Step Processor > Books: inventory and current catalogue prices
+Six Step Processor > Order Items: persist quantity and line totals
+Order Service > Customers: persist customer
+Order Service > Orders: persist order and status
+Six Step Processor > Audit Logs: append STARTED, PENDING, SUCCESS, FAILED events
+Six Step Processor > Hosted Payment Service: calculate XAF and initiate checkout
+Hosted Payment Service > USD XAF Primary Rate: fetch current USD/XAF rate
+Hosted Payment Service > USD XAF Fallback Rate: fallback when primary unavailable
+Hosted Payment Service > Fapshi Hosted Checkout: create hosted payment and redirect URL
+Fapshi Hosted Checkout > Customer Browser Return: browser redirect with orderId
+Fapshi Hosted Checkout > Webhook and Reconciliation: POST webhook with shared secret
+Bookstore Frontend > REST API: POST reconcile-payment and poll pending order
+REST API > Webhook and Reconciliation: verify webhook or reconcile by order ID
+Webhook and Reconciliation > Fapshi Hosted Checkout: query authoritative payment status
+Webhook and Reconciliation > Orders: match transaction ID, reference, amount; update payment
+Webhook and Reconciliation > Audit Logs: record payment result
+Webhook and Reconciliation > Six Step Processor: continue confirm and complete after verified success
+Six Step Processor > Observer Events: publish only on order completion
+Observer Events > Shipping Observer: after transaction commit
+Observer Events > Email Observer: after transaction commit
+Shipping Observer > Notification Service: record simulated shipping outcome
+Email Observer > Notification Service: record simulated email outcome
+Notification Service > Notifications: insert once per order and notification type
+REST API > Audit Logs: read order timeline
+REST API > Notifications: read observer outcomes

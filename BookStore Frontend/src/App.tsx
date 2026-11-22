@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { BrowserRouter, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AdminShell } from '../orderflow-bookstore/admin-frontend/src/App.jsx';
-import { CustomerShell } from '../orderflow-bookstore/customer-frontend/src/App.jsx';
-import { CartProvider } from '../orderflow-bookstore/customer-frontend/src/context/CartContext.jsx';
+import { CustomerShell } from '../orderflow-bookstore/Frontend/src/App.jsx';
+import { CartProvider } from '../orderflow-bookstore/Frontend/src/context/CartContext.jsx';
 
 const ADMIN_SESSION_KEY = 'orderflow_admin_unlocked';
 

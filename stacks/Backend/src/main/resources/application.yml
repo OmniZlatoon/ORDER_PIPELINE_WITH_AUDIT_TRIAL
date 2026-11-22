@@ -24,10 +24,11 @@ app:
     simulate-failure: ${SIMULATE_PAYMENT_FAILURE:false}
   fapshi:
     base-url: ${FAPSHI_API_BASE_URL:https://sandbox.fapshi.com}
-    api-user: ${FAPSHI_API_USER:}
-    api-secret: ${FAPSHI_API_SECRET:}
-    webhook-secret: ${FAPSHI_WEBHOOK_SECRET:}
+    api-user: ${FAPSHI_API_USER:eb6cf0e1-d321-43d6-b8a5-bc106180aad0}
+    api-secret: ${FAPSHI_API_SECRET:FAK_TEST_683b3454c2723a168eb9}
+    webhook-secret: ${FAPSHI_WEBHOOK_SECRET:FAPSHI_jjbrown_1234,.}
   exchange-rate:
     url: ${EXCHANGE_RATE_API_URL:https://open.er-api.com/v6/latest/USD}
+    fallback-url: ${EXCHANGE_RATE_FALLBACK_API_URL:https://latest.currency-api.pages.dev/v1/currencies/usd.json}
   frontend:
     base-url: ${FRONTEND_BASE_URL:https://subtarsal-kathyrn-untreated.ngrok-free.dev}
