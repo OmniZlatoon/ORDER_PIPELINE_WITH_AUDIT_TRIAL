@@ -1,4 +1,5 @@
 import { ArrowUpRight, Clock } from 'lucide-react';
+import MobileMoneyMethods from './MobileMoneyMethods';
 
 function formatXaf(amount) {
   if (amount === null || amount === undefined || Number.isNaN(Number(amount))) {
@@ -43,16 +44,7 @@ export default function PaymentPanel({
         ) : null}
       </div>
 
-      <div className="cf-payment-methods" aria-label="Supported mobile money providers">
-        <div className="cf-payment-method">
-          <span className="cf-payment-brand cf-payment-brand-mtn">MTN</span>
-          <span>MTN Mobile Money</span>
-        </div>
-        <div className="cf-payment-method">
-          <span className="cf-payment-brand cf-payment-brand-orange">orange</span>
-          <span>Orange Money</span>
-        </div>
-      </div>
+      <MobileMoneyMethods />
 
       {paymentLink ? (
         <button type="button" className="cf-btn cf-btn-primary" onClick={onProceedToPayment}>

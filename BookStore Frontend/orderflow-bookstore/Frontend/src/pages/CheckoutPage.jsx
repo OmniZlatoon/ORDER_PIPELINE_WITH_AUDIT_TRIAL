@@ -5,6 +5,7 @@ import { extractApiError } from '../api/axiosClient';
 import { createOrder } from '../api/orderApi';
 import ErrorMessage from '../components/ErrorMessage';
 import OrderForm from '../components/OrderForm';
+import MobileMoneyMethods from '../components/MobileMoneyMethods';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useBooks } from '../hooks/useBooks';
@@ -118,6 +119,11 @@ export default function CheckoutPage() {
       ) : null}
 
       <div className="cf-single-order-form-wrap">
+        <section className="cf-card cf-checkout-payment-methods" aria-label="Accepted payment methods">
+          <h2 className="cf-section-title">Pay with Mobile Money</h2>
+          <p className="cf-section-desc">Secure payment is available through Fapshi using either provider.</p>
+          <MobileMoneyMethods />
+        </section>
         <OrderForm
           fullName={fullName}
           email={email}

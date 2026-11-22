@@ -12,12 +12,14 @@ function formatTimestamp(value) {
   return date.toLocaleString();
 }
 
-function ObserverCard({ title, Icon, observerName, records }) {
+function ObserverCard({ title, Icon, observerName, records, pipelineFailed }) {
   const count = records.length;
   const primary = records[0] || null;
 
-  let outcomeText = `${observerName} notification: not sent`;
-  let outcomeColor = 'var(--cf-text-muted)';
+  let outcomeText = pipelineFailed
+    ? `${observerName} notification: cancelled (process ended).`
+    : `${observerName} notification: not sent`;
+  let outcomeColor = pipelineFailed ? 'var(--cf-error-text)' : 'var(--cf-text-muted)';
 
   if (count === 1) {
     outcomeText = `${observerName} notification: created and sent once.`;
@@ -37,7 +39,10 @@ function ObserverCard({ title, Icon, observerName, records }) {
         {primary ? (
           <StatusBadge status={primary.status} />
         ) : (
-          <StatusBadge status="NOT EXECUTED" label="NOT SENT" />
+          <StatusBadge
+            status={pipelineFailed ? 'FAILED' : 'NOT EXECUTED'}
+            label={pipelineFailed ? 'CANCELLED' : 'NOT SENT'}
+          />
         )}
       </div>
 
@@ -71,14 +76,16 @@ function ObserverCard({ title, Icon, observerName, records }) {
         </>
       ) : (
         <p style={{ fontSize: '0.84rem', color: 'var(--cf-text-muted)', margin: 0 }}>
-          Notifications are only sent after every order step is completed.
+          {pipelineFailed
+            ? 'The order process ended automatically when an earlier step failed, so this notification was not sent.'
+            : 'Notifications are only sent after every order step is completed.'}
         </p>
       )}
     </div>
   );
 }
 
-export default function ObserverStatus({ notifications = [] }) {
+export default function ObserverStatus({ notifications = [], pipelineFailed = false }) {
   const shippingRecords = notifications.filter(
     (item) => String(item.notificationType).toUpperCase() === 'SHIPPING'
   );
@@ -99,12 +106,14 @@ export default function ObserverStatus({ notifications = [] }) {
           Icon={Truck}
           observerName="Shipping"
           records={shippingRecords}
+          pipelineFailed={pipelineFailed}
         />
         <ObserverCard
           title="Email Notification"
           Icon={Mail}
           observerName="Email"
           records={emailRecords}
+          pipelineFailed={pipelineFailed}
         />
       </div>
     </section>
